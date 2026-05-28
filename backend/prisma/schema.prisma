@@ -30,4 +30,20 @@ model Uzorak {
 
   nalogId Int
   nalog   Nalog @relation(fields: [nalogId], references: [id])
+
+  ispitivanje Ispitivanje?
+}
+
+model Ispitivanje {
+  id Int @id @default(autoincrement())
+
+  visina   Float?
+  sirina   Float?
+  sila     Float?
+  cvrstoca Float?
+
+  datumIspitivanja DateTime @default(now())
+
+  uzorakId Int    @unique
+  uzorak   Uzorak @relation(fields: [uzorakId], references: [id])
 }

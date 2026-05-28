@@ -94,7 +94,7 @@ app.delete('/api/nalozi/:id', async (req, res) => {
 app.get('/api/uzorci', async (req, res) => {
   try {
     const uzorci = await prisma.uzorak.findMany({
-      include: { nalog: true },
+      include: { nalog: true, ispitivanje: true },
       orderBy: { id: 'desc' },
     });
     res.json(uzorci);
@@ -108,7 +108,7 @@ app.get('/api/uzorci/:id', async (req, res) => {
   try {
     const uzorak = await prisma.uzorak.findUnique({
       where: { id: Number(req.params.id) },
-      include: { nalog: true },
+      include: { nalog: true, ispitivanje: true },
     });
     if (!uzorak) return res.status(404).json({ error: 'Uzorak ne postoji' });
     res.json(uzorak);
@@ -160,6 +160,86 @@ app.delete('/api/uzorci/:id', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(400).json({ error: 'Greska pri brisanju uzorka' });
+  }
+});
+
+// ---------- ISPITIVANJA ----------
+
+app.get('/api/ispitivanja', async (req, res) => {
+  try {
+    const ispitivanja = await prisma.ispitivanje.findMany({
+      include: { uzorak: true },
+      orderBy: { id: 'desc' },
+    });
+    res.json(ispitivanja);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Greska pri dohvacanju ispitivanja' });
+  }
+});
+
+app.get('/api/ispitivanja/:id', async (req, res) => {
+  try {
+    const ispitivanje = await prisma.ispitivanje.findUnique({
+      where: { id: Number(req.params.id) },
+      include: { uzorak: true },
+    });
+    if (!ispitivanje) return res.status(404).json({ error: 'Ispitivanje ne postoji' });
+    res.json(ispitivanje);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Greska pri dohvacanju ispitivanja' });
+  }
+});
+
+app.post('/api/ispitivanja', async (req, res) => {
+  try {
+    const { visina, sirina, sila, cvrstoca, datumIspitivanja, uzorakId } = req.body;
+    const ispitivanje = await prisma.ispitivanje.create({
+      data: {
+        visina: visina !== undefined ? Number(visina) : null,
+        sirina: sirina !== undefined ? Number(sirina) : null,
+        sila: sila !== undefined ? Number(sila) : null,
+        cvrstoca: cvrstoca !== undefined ? Number(cvrstoca) : null,
+        datumIspitivanja: datumIspitivanja ? new Date(datumIspitivanja) : undefined,
+        uzorakId: Number(uzorakId),
+      },
+    });
+    res.status(201).json(ispitivanje);
+  } catch (err) {
+    console.error(err);
+    res.status(400).json({ error: 'Neispravni podaci za ispitivanje' });
+  }
+});
+
+app.put('/api/ispitivanja/:id', async (req, res) => {
+  try {
+    const { visina, sirina, sila, cvrstoca, datumIspitivanja, uzorakId } = req.body;
+    const ispitivanje = await prisma.ispitivanje.update({
+      where: { id: Number(req.params.id) },
+      data: {
+        visina: visina !== undefined ? Number(visina) : undefined,
+        sirina: sirina !== undefined ? Number(sirina) : undefined,
+        sila: sila !== undefined ? Number(sila) : undefined,
+        cvrstoca: cvrstoca !== undefined ? Number(cvrstoca) : undefined,
+        datumIspitivanja: datumIspitivanja ? new Date(datumIspitivanja) : undefined,
+        uzorakId: uzorakId !== undefined ? Number(uzorakId) : undefined,
+      },
+    });
+    res.json(ispitivanje);
+  } catch (err) {
+    console.error(err);
+    res.status(400).json({ error: 'Greska pri azuriranju ispitivanja' });
+  }
+});
+
+app.delete('/api/ispitivanja/:id', async (req, res) => {
+  try {
+    await prisma.ispitivanje.delete({ where: { id: Number(req.params.id) } });
+    res.status(204).send();
+  } catch (err) {
+    console.error(err);
+    res.status(400).json({ error: 'Greska pri brisanju ispitivanja' });
   }
 });
 
